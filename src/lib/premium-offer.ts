@@ -1,0 +1,77 @@
+import { queryOptions } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export const TIMER_COLORS = ["#F5B53D", "#F08A2E", "#E5482F", "#C21F1F"] as const;
+/** `url`: external payment link used for that day when the payment mode is "external URL". */
+export type DayPrice = { day: number; amount: number; url?: string | null };
+
+export const dayPricesQuery = queryOptions({
+  queryKey: ["day_prices"],
+  queryFn: async (): Promise<DayPrice[]> => {
+    const { data, error } = await supabase.from("day_prices").select("day, amount, url").order("day");
+    if (error) throw error;
+    return (data ?? []).map((r) => ({ day: r.day, amount: Number(r.amount), url: r.url }));
+  },
+});
+
+/** Day number (1-based) since `start`, clamped to [1, totalDays]. */
+export function dayFromStart(start: Date, totalDays: number, now: Date = new Date()): number {
+  const days = Math.floor((now.getTime() - start.getTime()) / 86_400_000) + 1;
+  return Math.min(Math.max(1, totalDays), Math.max(1, days));
+}
+
+/** The amount the user must pay today: the rule for the current day, or the last rule reached. */
+export function priceForDay(prices: DayPrice[], day: number): number {
+  const sorted = [...prices].sort((a, b) => a.day - b.day);
+  let amount = sorted[0]?.amount ?? 0;
+  for (const p of sorted) if (p.day <= day) amount = p.amount;
+  return amount;
+}
+
+export function splitElapsed(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    seconds: s % 60,
+  };
+}
+
+export function formatMoney(n: number, currency = "EUR") {
+  try {
+    return new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(n);
+  } catch {
+    return `${n.toFixed(2)} ${currency}`;
+  }
+}
+
+/** "1er", "2ème", "3ème"… */
+export function dayRank(day: number) {
+  return day === 1 ? "1er" : `${day}ème`;
+}
+
+/**
+ * Intro text shown above a day's price: today's text, tomorrow's text, or the
+ * per-day template for the other days ({prix} = that day's price, {rang} = its rank).
+ */
+export function dayIntro(
+  day: number,
+  today: number,
+  amount: number,
+  texts: { introToday: string; introTomorrow: string; introLater: string; currency: string },
+) {
+  if (day === today) return texts.introToday;
+  if (day === today + 1) return texts.introTomorrow;
+  return texts.introLater
+    .split("{prix}")
+    .join(formatMoney(amount, texts.currency))
+    .split("{rang}")
+    .join(dayRank(day));
+}
+
+/** Payment link for `day`: that day's own URL, else the general external URL. */
+export function paymentUrlForDay(prices: DayPrice[], day: number, fallback: string): string {
+  const own = prices.find((p) => p.day === day)?.url?.trim();
+  return own || fallback.trim();
+}

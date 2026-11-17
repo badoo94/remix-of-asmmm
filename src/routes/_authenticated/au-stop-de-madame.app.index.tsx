@@ -65,7 +65,11 @@ function Dashboard() {
     <div className="bg-app flex min-h-screen justify-center">
       <main className="flex min-h-screen w-full max-w-[430px] flex-col gap-4 overflow-x-hidden px-4 py-5 pb-12">
         <header className="text-center">
-          <p className="text-lg font-black tracking-tight text-brand-gold">{settings.appName}</p>
+          {settings.brandMode === "logo" && settings.logoUrl ? (
+            <img src={settings.logoUrl} alt={settings.appName} className="mx-auto max-h-16 max-w-[70%] object-contain" />
+          ) : (
+            <p className="text-lg font-black tracking-tight text-brand-gold">{settings.appName}</p>
+          )}
         </header>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -27,7 +27,7 @@ import {
   type ExerciseKey,
 } from "@/lib/settings";
 import { dayPricesQuery, formatMoney, type DayPrice } from "@/lib/premium-offer";
-import { uploadPremiumFile } from "@/lib/upload";
+import { uploadMedia, uploadPremiumFile } from "@/lib/upload";
 import { AiDistributor } from "./AiDistributor";
 
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
@@ -97,6 +97,32 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                 <Label>Nom de l'application</Label>
                 <Input value={cfg.appName} onChange={(e) => set({ appName: e.target.value })} placeholder="Au Stop de madame" />
                 <p className="text-xs text-muted-foreground">Affiché en haut du tableau de bord.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>En-tête du tableau de bord</Label>
+                <RadioGroup value={cfg.brandMode} onValueChange={(v) => set({ brandMode: v as "text" | "logo" })} className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="text" /> Nom en texte</label>
+                  <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="logo" /> Logo (image / GIF)</label>
+                </RadioGroup>
+                {cfg.brandMode === "logo" && (
+                  <div className="flex items-center gap-3">
+                    {cfg.logoUrl && <img src={cfg.logoUrl} alt="Logo" className="h-12 max-w-[120px] object-contain" />}
+                    <Input
+                      type="file"
+                      accept="image/*,.gif"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        try {
+                          set({ logoUrl: await uploadMedia(f) });
+                          toast.success("Logo importé — pensez à enregistrer");
+                        } catch {
+                          toast.error("Import du logo impossible");
+                        }
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <Row label="Utiliser le contenu interne" hint="Le contenu interne est le rendu visuel de la page Méthode.">
                 <Switch checked={cfg.useInternalContent} onCheckedChange={(v) => set({ useInternalContent: v })} />
@@ -210,6 +236,14 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                   <Label>Devise</Label>
                   <Input value={cfg.currency} onChange={(e) => set({ currency: e.target.value.toUpperCase().slice(0, 3) })} />
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Badge promo (tableau de bord)</Label>
+                <Input value={cfg.promoBadge} onChange={(e) => set({ promoBadge: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Texte à côté du badge</Label>
+                <Input value={cfg.promoSubtitle} onChange={(e) => set({ promoSubtitle: e.target.value })} />
               </div>
               <div className="space-y-1.5">
                 <Label>Introduction du jour actuel</Label>

@@ -121,6 +121,12 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      // After Google/Lovable sign-in the browser lands on "/": resume the page the user was heading to.
+      const back = event === "SIGNED_IN" ? sessionStorage.getItem("asdm_return_to") : null;
+      if (back && back.startsWith("/") && !back.startsWith("//") && window.location.pathname !== "/auth") {
+        sessionStorage.removeItem("asdm_return_to");
+        router.navigate({ to: back });
+      }
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       else queryClient.removeQueries({ queryKey: ["access"] });

@@ -9,6 +9,11 @@ export type PracticeRules = Record<"fr" | "en", Record<ExerciseKey, string>>;
 export interface AppConfig {
   /** Name shown at the top of the dashboard. */
   appName: string;
+  /** Header shows the logo image instead of the name when "logo" and a logo is set. */
+  brandMode: "text" | "logo";
+  logoUrl: string;
+  promoBadge: string;
+  promoSubtitle: string;
   useInternalContent: boolean;
   fontSize: number;
   footerText: string;
@@ -69,6 +74,7 @@ Règles de mise en page :
 - Uniformité stricte des cadres : chaque cadre a la même hauteur fixe (205mm). Le texte du cadre est en Inter 12, justifié.
 - Visibilité & Ajustement : Le contenu texte d'un cadre doit être entièrement visible à l'écran sans aucune partie cachée. Dans les cas où le contenu texte dans la zone d'en-tête externe d'un cadre (hors du cadre) est assez longue, pour éviter que le cadre se superpose au contenu d'en-tête, le cadre doit être réduit verticalement selon la taille prise par la zone d'en-tête.
 - Remplissage : le cadre d'une page doit être plein (environ 3000 caractères) si le texte du chapitre continue sur une page de continuation ; il peut être partiellement rempli seulement si le chapitre se termine sur cette page. Une page avec titres externes contient un peu moins de texte (environ 2600 caractères).
+- Table des matières : chaque entrée (partie, chapitre, sous-chapitre) d'un sommaire doit être un lien <a data-goto="TITRE EXACT">TITRE EXACT</a>, où TITRE EXACT reprend mot pour mot le texte placé dans le champ "titre", "chapitre", "sousChapitre" ou "partie" de la page qui ouvre cette section. Le lecteur utilise ce lien pour amener l'utilisateur à la bonne page.
 - Le corps ("body") est du HTML simple : un <p> par paragraphe, <strong> pour le gras, <u> pour le souligné, "• " en début de paragraphe pour une puce.
 
 Réponds UNIQUEMENT en JSON :
@@ -76,6 +82,10 @@ Réponds UNIQUEMENT en JSON :
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   appName: "Au Stop de madame",
+  brandMode: "text",
+  logoUrl: "",
+  promoBadge: "Super promo.",
+  promoSubtitle: "Le prix augmente chaque jour",
   useInternalContent: true,
   fontSize: 18,
   footerText: "au-stop-de-madame.store",

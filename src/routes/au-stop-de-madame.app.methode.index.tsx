@@ -1,3 +1,4 @@
+import { findSectionPage } from "@/lib/toc";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useRef, useState, type MouseEvent } from "react";
@@ -83,8 +84,19 @@ function MethodReader() {
     }
   }
 
+  /** Table-of-contents links (<a data-goto="Titre">) jump to the page that opens that section. */
+  function onTocClick(e: MouseEvent) {
+    const a = (e.target as HTMLElement).closest?.("a[data-goto], a[href^='#']") as HTMLAnchorElement | null;
+    if (!a) return;
+    const n = findSectionPage(pages, a.getAttribute("data-goto") || a.getAttribute("href")?.slice(1) || a.textContent || "");
+    if (!n) return;
+    e.preventDefault();
+    const el = pageEls.current.get(n);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 64, behavior: "smooth" });
+  }
+
   return (
-    <div className="bg-reader min-h-screen">
+    <div className="bg-reader min-h-screen" onClickCapture={onTocClick}>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/40 bg-reader/95 px-4 py-3 text-page backdrop-blur">
         <Link to={user ? "/au-stop-de-madame/app" : "/auth"} className="flex items-center gap-1.5 text-sm font-medium">
           <ArrowLeft className="h-4 w-4" /> {user ? "Tableau de bord" : "Connexion"}

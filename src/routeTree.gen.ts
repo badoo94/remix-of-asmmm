@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SuccesRouteImport } from './routes/succes'
 import { Route as AuStopDeMadamePaiementRetourRouteImport } from './routes/au-stop-de-madame.paiement-retour'
 import { Route as AuthenticatedAuStopDeMadameEditRouteImport } from './routes/_authenticated/au-stop-de-madame.edit'
 import { Route as ApiPublicMonerooWebhookRouteImport } from './routes/api/public/moneroo-webhook'
@@ -33,6 +34,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuccesRoute = SuccesRouteImport.update({
+  id: '/succes',
+  path: '/succes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuStopDeMadamePaiementRetourRoute =
@@ -86,6 +92,7 @@ const AuthenticatedAuStopDeMadameAppMethodeSetRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/succes': typeof SuccesRoute
   '/au-stop-de-madame/paiement-retour': typeof AuStopDeMadamePaiementRetourRoute
   '/au-stop-de-madame/edit': typeof AuthenticatedAuStopDeMadameEditRoute
   '/api/public/moneroo-webhook': typeof ApiPublicMonerooWebhookRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/succes': typeof SuccesRoute
   '/au-stop-de-madame/paiement-retour': typeof AuStopDeMadamePaiementRetourRoute
   '/au-stop-de-madame/edit': typeof AuthenticatedAuStopDeMadameEditRoute
   '/api/public/moneroo-webhook': typeof ApiPublicMonerooWebhookRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/succes': typeof SuccesRoute
   '/au-stop-de-madame/paiement-retour': typeof AuStopDeMadamePaiementRetourRoute
   '/_authenticated/au-stop-de-madame/edit': typeof AuthenticatedAuStopDeMadameEditRoute
   '/api/public/moneroo-webhook': typeof ApiPublicMonerooWebhookRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/succes'
     | '/au-stop-de-madame/paiement-retour'
     | '/au-stop-de-madame/edit'
     | '/api/public/moneroo-webhook'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/succes'
     | '/au-stop-de-madame/paiement-retour'
     | '/au-stop-de-madame/edit'
     | '/api/public/moneroo-webhook'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/succes'
     | '/au-stop-de-madame/paiement-retour'
     | '/_authenticated/au-stop-de-madame/edit'
     | '/api/public/moneroo-webhook'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  SuccesRoute: typeof SuccesRoute
   AuStopDeMadamePaiementRetourRoute: typeof AuStopDeMadamePaiementRetourRoute
   ApiPublicMonerooWebhookRoute: typeof ApiPublicMonerooWebhookRoute
   AuStopDeMadameAppExerciceRoute: typeof AuStopDeMadameAppExerciceRoute
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/succes': {
+      id: '/succes'
+      path: '/succes'
+      fullPath: '/succes'
+      preLoaderRoute: typeof SuccesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/au-stop-de-madame/paiement-retour': {
@@ -275,6 +295,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  SuccesRoute: SuccesRoute,
   AuStopDeMadamePaiementRetourRoute: AuStopDeMadamePaiementRetourRoute,
   ApiPublicMonerooWebhookRoute: ApiPublicMonerooWebhookRoute,
   AuStopDeMadameAppExerciceRoute: AuStopDeMadameAppExerciceRoute,

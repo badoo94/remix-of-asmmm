@@ -55,9 +55,9 @@ export function PremiumCountdown({ prices, today, signupAt, settings }: Props) {
     <div className="flex flex-col gap-4 rounded-3xl border border-border bg-brand-card/90 p-5 shadow-lg">
       <div className="flex flex-wrap items-center justify-center gap-2">
         <span className="inline-flex items-center rounded-full border border-brand-alert/80 bg-brand-alert/10 px-3 py-1 text-xs font-semibold tracking-wide text-brand-alert shadow-glow-red">
-          Super promo.
+          {settings.promoBadge}
         </span>
-        <span className="text-xs font-medium text-muted-foreground">Le prix augmente chaque jour</span>
+        <span className="text-xs font-medium text-muted-foreground">{settings.promoSubtitle}</span>
       </div>
 
       <div className="grid grid-cols-2 items-center gap-3">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Film, Plus, Save, Trash2, X } from "lucide-react";
+import { Film, Maximize2, Minimize2, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { CARD_COLORS, newCard, newMediaCard, newTextLine, type CustomCard } from "@/lib/method";
 import { useDismissedCards } from "@/lib/dismissed-cards";
@@ -244,6 +244,7 @@ export function CustomPageInlineEditor({
 }) {
   const frames = useRef(new Map<string, HTMLIFrameElement>());
   const media = useRef(new Map<string, HTMLElement>());
+  const [bigId, setBigId] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -310,9 +311,21 @@ export function CustomPageInlineEditor({
         {cards.map((card, i) => (
           <div
             key={card.id}
-            className="relative mx-auto h-[85vh] w-full max-w-3xl overflow-hidden rounded-[36px]"
+            className={
+              bigId === card.id
+                ? "fixed inset-0 z-[96] h-screen w-screen overflow-hidden"
+                : "relative mx-auto h-[85vh] w-full max-w-3xl overflow-hidden rounded-[36px]"
+            }
             style={{ ["--cp-color" as string]: card.color || CARD_COLORS[i % CARD_COLORS.length] }}
           >
+            <button
+              type="button"
+              aria-label={bigId === card.id ? "Réduire la carte" : "Agrandir la carte en plein écran"}
+              onClick={() => setBigId(bigId === card.id ? null : card.id)}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-page-ink/80 text-page shadow"
+            >
+              {bigId === card.id ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
             {card.kind === "media" ? (
               <div ref={(el) => void (el ? media.current.set(card.id, el) : media.current.delete(card.id))} className="cp-media">
                 {card.mediaUrl ? (

@@ -42,3 +42,7 @@ use the editor.
 - Every premium payment runs in a popup window (external URL per `day_prices.url`, falling back to the general URL; Moneroo returns to `/au-stop-de-madame/paiement-retour`, which verifies, notifies the opener and closes); why: the user never leaves the app to pay.
 - Two-finger scrolling over custom-page cards (carousel and card iframes) is forwarded to the page scroller (`bridgeScroll` in CustomPage.tsx); why: cards must never scroll internally.
 - The first account to sign up becomes admin (signup trigger); why: a fresh backend needs one owner to configure the app.
+
+- Table-of-contents links are `<a data-goto="exact heading">` resolved by `findSectionPage` (src/lib/toc.ts) in the reader; why: AI output and reader must agree on one link format.
+- `/succes` (and `/succès`, redirected in src/server.ts) grants premium to the signed-in visitor via `grantSuccessPremium`; why: hidden success URL used by external payment pages.
+- OAuth returns to the site origin; the pending path is kept in sessionStorage `asdm_return_to` and resumed in __root; why: OAuth redirect_uri must be the public origin.

@@ -40,7 +40,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     const tag = () =>
       document.querySelectorAll<HTMLAnchorElement>("a[data-goto]:not([data-level])").forEach((a) => {
         const t = (a.getAttribute("data-goto") || a.textContent || "").trim();
-        a.dataset.level = /^(\d+\.\d+|sous[- ]chapitre)/i.test(t) ? "sub" : "chapter";
+        a.dataset["level"] = /^(\d+\.\d+|sous[- ]chapitre)/i.test(t) ? "sub" : "chapter";
       });
     tag();
     const mo = new MutationObserver(tag);

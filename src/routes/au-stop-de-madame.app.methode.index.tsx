@@ -1,10 +1,10 @@
 import { findSectionPage } from "@/lib/toc";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useRef, useState, type MouseEvent } from "react";
-import { ArrowLeft, ChevronsDown, ChevronsUp, Loader2, Maximize2, Pause, Play } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { ArrowLeft, ChevronsDown, Minus, Plus, ChevronsUp, Loader2, Maximize2, Pause, Play } from "lucide-react";
 import { methodQuery, rectsOverlap, type MethodRect } from "@/lib/method";
-import { appSettingsQuery, DEFAULT_APP_CONFIG } from "@/lib/settings";
+import { appSettingsQuery, clampReaderFont, DEFAULT_APP_CONFIG, FONT_MAX, FONT_MIN } from "@/lib/settings";
 import { useAccess } from "@/lib/auth";
 import { A4Page } from "@/components/method/A4Page";
 import { usePageScale } from "@/components/method/useScale";
@@ -41,6 +41,18 @@ function MethodReader() {
   const [revealed, setRevealed] = useState<Record<string, Reveal>>({});
   const [fullId, setFullId] = useState<string | null>(null);
   const closeFull = useCallback(() => setFullId(null), []);
+  // Reader's own text size, kept on this device only (localStorage); null = admin default.
+  const [userFont, setUserFont] = useState<number | null>(null);
+  useEffect(() => {
+    const v = Number(localStorage.getItem("asdm_font"));
+    if (v) setUserFont(clampReaderFont(v));
+  }, []);
+  const fontSize = userFont ?? clampReaderFont(settings.fontSize);
+  const changeFont = (d: number) => {
+    const v = clampReaderFont(fontSize + d);
+    setUserFont(v);
+    localStorage.setItem("asdm_font", String(v));
+  };
 
   const pages = data?.pages ?? [];
   const rects = data?.rects ?? [];
@@ -124,7 +136,7 @@ function MethodReader() {
               page={page}
               pageNumber={n}
               scale={scale}
-              fontSize={settings.fontSize}
+              fontSize={fontSize}
               footerText={settings.footerText}
               reading={tts.playing && tts.page === n}
               pageRef={(el) => {
@@ -215,6 +227,18 @@ function MethodReader() {
       </div>
 
       {fullId && <CustomPageFullscreen cards={pages.find((p) => p.id === fullId)?.cards ?? []} onClose={closeFull} />}
+
+      {pages.length > 0 && (
+        <div className="fixed bottom-3 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-2xl backdrop-blur">
+          <button type="button" aria-label="Réduire la taille du texte" disabled={fontSize <= FONT_MIN} onClick={() => changeFont(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary disabled:opacity-40">
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="w-12 text-center text-sm font-bold">{fontSize} pt</span>
+          <button type="button" aria-label="Augmenter la taille du texte" disabled={fontSize >= FONT_MAX} onClick={() => changeFont(1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary disabled:opacity-40">
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {pages.length > 0 && (
         <TTSBar

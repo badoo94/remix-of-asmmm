@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Lock, Pause, Play, Square } from "lucide-react";
+import { Loader2, Lock, Pause, Play, Square, X } from "lucide-react";
 import type { VoiceGender } from "./useTTS";
 import { cn } from "@/lib/utils";
 
@@ -21,8 +21,26 @@ interface Props {
 
 export function TTSBar(p: Props) {
   const [target, setTarget] = useState("");
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        type="button"
+        aria-label="Ouvrir la lecture audio"
+        onClick={() => setOpen(true)}
+        className="fixed bottom-20 left-3 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-cta text-brand-ink shadow-glow"
+      >
+        {p.loading ? <Loader2 className="h-5 w-5 animate-spin" /> : p.playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+      </button>
+    );
+  }
+  const close = (
+    <button type="button" aria-label="Réduire la lecture audio" onClick={() => setOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+      <X className="h-3.5 w-3.5" />
+    </button>
+  );
   const shell =
-    "fixed bottom-3 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 items-center gap-2 rounded-2xl border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-2xl backdrop-blur";
+    "fixed bottom-20 left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 items-center gap-2 rounded-2xl border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-2xl backdrop-blur";
 
   if (!p.premium) {
     return (
@@ -32,6 +50,7 @@ export function TTSBar(p: Props) {
         <button type="button" onClick={p.onUpgrade} className="shrink-0 rounded-lg bg-cta px-3 py-2 text-xs font-bold text-brand-ink">
           Passer premium
         </button>
+        {close}
       </div>
     );
   }
@@ -88,6 +107,7 @@ export function TTSBar(p: Props) {
           Lire
         </button>
       </div>
+      {close}
     </div>
   );
 }

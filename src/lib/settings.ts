@@ -83,6 +83,17 @@ Règles de mise en page :
 Réponds UNIQUEMENT en JSON :
 {"pages":[{"type":"...","partie":"","chapitre":"","titre":"","sousChapitre":"","body":"<p>...</p>"}]}`;
 
+/** Font size limits (pt): admin sets the default up to 27, readers adjust 18–27 locally. */
+export const FONT_MIN = 18;
+export const FONT_MAX = 27;
+export const clampReaderFont = (n: number) => Math.min(FONT_MAX, Math.max(FONT_MIN, Math.round(n)));
+
+/** Approximate characters that fit one A4 frame at a given size (calibrated ~1100 chars at 18 pt). */
+export function pageCharBudget(fontPt: number): number {
+  const size = Math.min(FONT_MAX, Math.max(8, fontPt || 18));
+  return Math.round((1100 * (18 / size) ** 2) / 50) * 50;
+}
+
 export const DEFAULT_APP_CONFIG: AppConfig = {
   appName: "Au Stop de madame",
   brandMode: "text",

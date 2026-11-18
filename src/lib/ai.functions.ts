@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateChatCompletion, GatewayError } from "@lovable.dev/ai-gateway";
-import { mergeAdminConfig } from "./settings";
+import { mergeAdminConfig, mergeAppConfig, pageCharBudget } from "./settings";
 
 export interface AiPage {
   type: string;
@@ -46,9 +46,13 @@ export const distributeTextChunk = createServerFn({ method: "POST" })
 
     const { data: row } = await context.supabase.from("admin_settings").select("config").eq("id", 1).maybeSingle();
     const cfg = mergeAdminConfig(row?.config);
+    const { data: appRow } = await context.supabase.from("app_settings").select("config").eq("id", 1).maybeSingle();
+    const fontPt = mergeAppConfig(appRow?.config).fontSize;
+    const budget = pageCharBudget(fontPt);
 
     const userMsg =
       `Partie ${data.part}/${data.total} du PDF.` +
+      `\nTaille de police des cadres : ${fontPt} pt. Mets au maximum environ ${budget} caractères de texte par cadre (une ligne vide compte pour 60) et ajoute autant de pages que nécessaire, pour que tous les cadres gardent la même taille de police.` +
       (data.note ? `\nConsigne de l'administrateur : ${data.note}` : "") +
       (data.part > 1 ? `\nCette partie suit directement la précédente : si le texte continue un chapitre, commence par une page "frame".` : "") +
       `\n\nTEXTE DU PDF :\n"""\n${data.text}\n"""`;

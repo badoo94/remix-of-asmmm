@@ -124,6 +124,12 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                 )}
               </div>
+              <Row label="Connexion avec Google" hint="Affiche le bouton « Continuer avec Google » sur l'écran de connexion.">
+                <Switch checked={cfg.googleLogin} onCheckedChange={(v) => set({ googleLogin: v })} />
+              </Row>
+              <Row label="Connexion avec Lovable" hint="Affiche le bouton « Continuer avec Lovable » sur l'écran de connexion.">
+                <Switch checked={cfg.lovableLogin} onCheckedChange={(v) => set({ lovableLogin: v })} />
+              </Row>
               <Row label="Utiliser le contenu interne" hint="Le contenu interne est le rendu visuel de la page Méthode.">
                 <Switch checked={cfg.useInternalContent} onCheckedChange={(v) => set({ useInternalContent: v })} />
               </Row>

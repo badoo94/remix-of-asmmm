@@ -15,6 +15,9 @@ export interface AppConfig {
   promoBadge: string;
   promoSubtitle: string;
   useInternalContent: boolean;
+  /** Show the Google / Lovable sign-in buttons on /auth. */
+  googleLogin: boolean;
+  lovableLogin: boolean;
   fontSize: number;
   footerText: string;
   paymentMode: PaymentMode;
@@ -87,6 +90,8 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   promoBadge: "Super promo.",
   promoSubtitle: "Le prix augmente chaque jour",
   useInternalContent: true,
+  googleLogin: true,
+  lovableLogin: true,
   fontSize: 18,
   footerText: "au-stop-de-madame.store",
   paymentMode: "simple",

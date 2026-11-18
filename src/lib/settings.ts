@@ -29,6 +29,9 @@ export interface AppConfig {
   introTomorrow: string;
   /** Intro of the other days; {prix} = that day's price, {rang} = its rank ("3ème"). */
   introLater: string;
+  /** Colors of clickable TOC entries (empty = theme gold). */
+  tocChapterColor: string;
+  tocSubColor: string;
   practiceRules: PracticeRules;
 }
 
@@ -112,6 +115,8 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   introToday: "Obtenez l'offre premium Aujourd'hui à :",
   introTomorrow: "Obtenez l'offre premium demain à :",
   introLater: "Le prix augmente à {prix} le {rang} jour",
+  tocChapterColor: "",
+  tocSubColor: "",
   practiceRules: DEFAULT_PRACTICE_RULES,
 };
 

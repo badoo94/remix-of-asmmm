@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,23 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
   const [orderInfo, setOrderInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [bigPay, setBigPay] = useState(false);
+
+  // TOC link colors (admin settings); sub-chapter links ("1.1 …") are tagged data-level="sub".
+  useEffect(() => {
+    const root = document.documentElement.style;
+    settings.tocChapterColor ? root.setProperty("--toc-chapter", settings.tocChapterColor) : root.removeProperty("--toc-chapter");
+    settings.tocSubColor ? root.setProperty("--toc-sub", settings.tocSubColor) : root.removeProperty("--toc-sub");
+    const tag = () =>
+      document.querySelectorAll<HTMLAnchorElement>("a[data-goto]:not([data-level])").forEach((a) => {
+        const t = (a.getAttribute("data-goto") || a.textContent || "").trim();
+        a.dataset.level = /^(\d+\.\d+|sous[- ]chapitre)/i.test(t) ? "sub" : "chapter";
+      });
+    tag();
+    const mo = new MutationObserver(tag);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [settings.tocChapterColor, settings.tocSubColor]);
 
   // Return from Moneroo checkout: verify and sync premium automatically.
   useEffect(() => {
@@ -65,6 +82,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   }, [refetch, qc]);
   const closePayment = () => {
     setExternalUrl(null);
+    setBigPay(false);
     refetch();
     qc.invalidateQueries();
   };
@@ -123,15 +141,20 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         {/* Same size as the settings window, page behind stays sharp and visible on every side. */}
         <DialogContent
           overlayClassName="bg-transparent"
-          style={{ width: "min(48rem, calc(100vw - 2rem))", height: "calc(100dvh - 4rem)", maxWidth: "none", maxHeight: "none" }}
+          style={bigPay ? { width: "100vw", height: "100dvh", maxWidth: "none", maxHeight: "none", borderRadius: 0 } : { width: "min(48rem, calc(100vw - 2rem))", height: "calc(100dvh - 4rem)", maxWidth: "none", maxHeight: "none" }}
           className="flex flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl [&>button]:hidden"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <DialogTitle className="text-sm font-semibold">Offre premium</DialogTitle>
             <DialogDescription className="sr-only">Page de paiement externe</DialogDescription>
-            <Button size="icon" variant="ghost" onClick={closePayment} aria-label="Fermer">
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" onClick={() => setBigPay((b) => !b)} aria-label={bigPay ? "Réduire" : "Agrandir en plein écran"}>
+                {bigPay ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+              <Button size="icon" variant="ghost" onClick={closePayment} aria-label="Fermer">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           {externalUrl && (
             <iframe

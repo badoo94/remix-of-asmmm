@@ -212,30 +212,19 @@ export function CustomPageFullscreen({ cards, onClose }: { cards: CustomCard[]; 
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = box.current;
-    // Keep portrait: some phones rotate to landscape when an element enters fullscreen.
-    type Lockable = ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void };
-    const orient = (typeof screen !== "undefined" ? screen.orientation : undefined) as Lockable | undefined;
-    el?.requestFullscreen?.({ navigationUI: "hide" })
-      .then(() => orient?.lock?.("portrait").catch(() => undefined))
-      .catch(() => undefined);
+    // CSS-only fullscreen: native requestFullscreen makes some phones rotate to landscape.
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    const onFs = () => !document.fullscreenElement && onClose();
     window.addEventListener("keydown", onKey);
-    document.addEventListener("fullscreenchange", onFs);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.removeEventListener("fullscreenchange", onFs);
       document.body.style.overflow = prev;
-      try { orient?.unlock?.(); } catch { /* ignore */ }
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
     };
   }, [onClose]);
 
   return createPortal(
-    <div ref={box} className="fixed inset-0 z-[90]">
+    <div ref={box} className="fixed inset-0 z-[90] h-[100dvh] w-full bg-background">
       <CustomCarousel cards={cards} />
       <button
         type="button"

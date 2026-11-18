@@ -256,6 +256,16 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                 <Label>Texte à côté du badge</Label>
                 <Input value={cfg.promoSubtitle} onChange={(e) => set({ promoSubtitle: e.target.value })} />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Couleur des chapitres (sommaire)</Label>
+                  <Input type="color" className="h-10 p-1" value={cfg.tocChapterColor || "#d4a64a"} onChange={(e) => set({ tocChapterColor: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Couleur des sous-chapitres</Label>
+                  <Input type="color" className="h-10 p-1" value={cfg.tocSubColor || cfg.tocChapterColor || "#d4a64a"} onChange={(e) => set({ tocSubColor: e.target.value })} />
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <Label>Introduction du jour actuel</Label>
                 <Input value={cfg.introToday} onChange={(e) => set({ introToday: e.target.value })} />

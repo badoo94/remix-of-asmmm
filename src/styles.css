@@ -676,7 +676,7 @@
 /* Clickable table-of-contents entries */
 .mp-page a[data-goto],
 .mp-custom-shell a[data-goto] {
-  color: var(--brand-gold, currentColor);
+  color: var(--toc-chapter, var(--brand-gold, currentColor));
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -688,4 +688,8 @@
   text-decoration: none;
   display: inline-block;
   margin-left: 0.25em;
+}
+.mp-page a[data-goto][data-level="sub"],
+.mp-custom-shell a[data-goto][data-level="sub"] {
+  color: var(--toc-sub, var(--toc-chapter, var(--brand-gold, currentColor)));
 }

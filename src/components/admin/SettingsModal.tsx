@@ -19,7 +19,6 @@ import {
   DEFAULT_AI_INSTRUCTION,
   FONT_MIN,
   FONT_MAX,
-  pageCharBudget,
   DEFAULT_APP_CONFIG,
   DEFAULT_ADMIN_CONFIG,
   loadAdminConfig,
@@ -184,7 +183,7 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                   </button>
                 </div>
                 <p className="rounded-lg bg-brand-inset px-3 py-2 text-xs text-muted-foreground">
-                  Taille de police active : <strong>{cfg.fontSize} pt</strong> (environ {pageCharBudget(cfg.fontSize)} caractères par cadre). L'IA reçoit ces valeurs automatiquement.
+                  Gabarit IA fixe : <strong>27 pt</strong>. Chaque cadre est rempli à sa capacité maximale à 27 pt ; les lecteurs démarrent à 27 pt et peuvent réduire jusqu'à 18 pt.
                 </p>
                 <Textarea rows={10} className="text-xs" value={admin.aiInstruction} onChange={(e) => setA({ aiInstruction: e.target.value })} />
               </div>

@@ -47,7 +47,7 @@ function MethodReader() {
     const v = Number(localStorage.getItem("asdm_font"));
     if (v) setUserFont(clampReaderFont(v));
   }, []);
-  const fontSize = userFont ?? clampReaderFont(settings.fontSize);
+  const fontSize = userFont ?? FONT_MAX;
   const changeFont = (d: number) => {
     const v = clampReaderFont(fontSize + d);
     setUserFont(v);

@@ -123,7 +123,8 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         {/* Same size as the settings window, page behind stays sharp and visible on every side. */}
         <DialogContent
           overlayClassName="bg-transparent"
-          className="flex h-[calc(100dvh-4rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl [&>button]:hidden"
+          style={{ width: "min(48rem, calc(100vw - 2rem))", height: "calc(100dvh - 4rem)", maxWidth: "none", maxHeight: "none" }}
+          className="flex flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl [&>button]:hidden"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <DialogTitle className="text-sm font-semibold">Offre premium</DialogTitle>
@@ -136,7 +137,7 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
             <iframe
               title="Paiement"
               src={externalUrl}
-              className="h-full w-full flex-1 bg-background"
+              className="block min-h-0 w-full flex-1 bg-background"
               allow="payment *; clipboard-write"
             />
           )}

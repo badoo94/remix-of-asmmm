@@ -17,6 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   appSettingsQuery,
   DEFAULT_AI_INSTRUCTION,
+  FONT_MIN,
+  FONT_MAX,
+  pageCharBudget,
   DEFAULT_APP_CONFIG,
   DEFAULT_ADMIN_CONFIG,
   loadAdminConfig,
@@ -135,7 +138,7 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
               </Row>
               <div className="space-y-2">
                 <Label>Taille de police du cadre (Inter) : {cfg.fontSize} pt</Label>
-                <Slider min={8} max={27} step={1} value={[cfg.fontSize]} onValueChange={([v]) => set({ fontSize: v ?? 18 })} />
+                <Slider min={FONT_MIN} max={FONT_MAX} step={1} value={[cfg.fontSize]} onValueChange={([v]) => set({ fontSize: v ?? 18 })} />
                 <p className="text-xs text-muted-foreground">Le texte réduit automatiquement si un cadre déborde, pour rester entièrement visible.</p>
               </div>
               <div className="space-y-1.5">
@@ -180,6 +183,9 @@ export function SettingsModal({ open, onOpenChange }: { open: boolean; onOpenCha
                     Rétablir l'instruction par défaut
                   </button>
                 </div>
+                <p className="rounded-lg bg-brand-inset px-3 py-2 text-xs text-muted-foreground">
+                  Taille de police active : <strong>{cfg.fontSize} pt</strong> (environ {pageCharBudget(cfg.fontSize)} caractères par cadre). L'IA reçoit ces valeurs automatiquement.
+                </p>
                 <Textarea rows={10} className="text-xs" value={admin.aiInstruction} onChange={(e) => setA({ aiInstruction: e.target.value })} />
               </div>
               <AiDistributor beforeRun={() => saveAll(true)} />

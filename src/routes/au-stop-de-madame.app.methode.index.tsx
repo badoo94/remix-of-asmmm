@@ -2,7 +2,7 @@ import { findSectionPage } from "@/lib/toc";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useRef, useState, type MouseEvent } from "react";
-import { ArrowLeft, ChevronsDown, ChevronsUp, Maximize2 } from "lucide-react";
+import { ArrowLeft, ChevronsDown, ChevronsUp, Loader2, Maximize2, Pause, Play } from "lucide-react";
 import { methodQuery, rectsOverlap, type MethodRect } from "@/lib/method";
 import { appSettingsQuery, DEFAULT_APP_CONFIG } from "@/lib/settings";
 import { useAccess } from "@/lib/auth";
@@ -144,6 +144,24 @@ function MethodReader() {
               }
               overlay={
                 <>
+                  <button
+                    type="button"
+                    aria-label={tts.playing && tts.page === n ? `Pause page ${n}` : `Lire la page ${n}`}
+                    onClick={() => {
+                      if (!isPremium) return startCheckout();
+                      if (tts.playing && tts.page === n) tts.pause();
+                      else tts.play(tts.page === n ? undefined : n, true);
+                    }}
+                    className="absolute right-[3%] top-[1.2%] z-30 flex h-14 w-14 items-center justify-center rounded-full bg-cta text-brand-ink shadow-glow"
+                  >
+                    {tts.loading && tts.page === n ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : tts.playing && tts.page === n ? (
+                      <Pause className="h-6 w-6" />
+                    ) : (
+                      <Play className="h-6 w-6" />
+                    )}
+                  </button>
                   {contents.map((r) => (
                     <RectContent
                       key={r.id}
@@ -207,7 +225,7 @@ function MethodReader() {
           total={pages.length}
           auto={tts.auto}
           gender={tts.gender}
-          onPlay={tts.play}
+          onPlay={(p) => tts.play(p, false)}
           onPause={tts.pause}
           onStop={tts.stop}
           onAuto={tts.setAuto}

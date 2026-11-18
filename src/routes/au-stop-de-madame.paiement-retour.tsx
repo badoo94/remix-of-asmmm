@@ -30,7 +30,8 @@ function PaymentReturn() {
     const paymentId = new URLSearchParams(window.location.search).get("paymentId");
     const finish = (ok: boolean) => {
       setState(ok ? "ok" : "failed");
-      window.opener?.postMessage({ type: "asm-payment-done", ok }, window.location.origin);
+      const host = window.opener ?? (window.parent !== window ? window.parent : null);
+      host?.postMessage({ type: "asm-payment-done", ok }, window.location.origin);
       if (window.opener) window.setTimeout(() => window.close(), ok ? 1800 : 4000);
     };
     if (!user || !paymentId) return finish(false);

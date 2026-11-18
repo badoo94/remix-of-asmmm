@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccess } from "@/lib/auth";
 import { appSettingsQuery, DEFAULT_APP_CONFIG } from "@/lib/settings";
-import { dayFromStart, dayPricesQuery, formatMoney, priceForDay } from "@/lib/premium-offer";
+import { dayFromStart, dayPricesQuery, formatMoney, paymentUrlForDay, priceForDay } from "@/lib/premium-offer";
 import { confirmMonerooPayment, startMonerooPayment } from "@/lib/payment.functions";
 
 type Ctx = { startCheckout: (opts?: { url?: string | undefined }) => void; busy: boolean };
@@ -17,15 +17,6 @@ const PaymentCtx = createContext<Ctx>({ startCheckout: () => {}, busy: false });
 
 export function usePremiumCheckout() {
   return useContext(PaymentCtx);
-}
-
-/** Opens a centered payment popup window; null when the browser blocks it. */
-function openPaymentPopup(url: string): Window | null {
-  const w = Math.min(520, window.screen.availWidth - 20);
-  const h = Math.min(760, window.screen.availHeight - 40);
-  const left = Math.max(0, (window.screen.availWidth - w) / 2);
-  const top = Math.max(0, (window.screen.availHeight - h) / 2);
-  return window.open(url, "asm-payment", `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
 }
 
 export function PaymentProvider({ children }: { children: ReactNode }) {
@@ -61,27 +52,22 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       });
   }, [user, confirmMoneroo, refetch, qc]);
 
-  // Every payment runs in a popup: when it closes (or reports back), re-check premium status.
-  const watchPopup = useCallback(
-    (win: Window) => {
-      const done = () => {
-        refetch();
-        qc.invalidateQueries();
-      };
-      const onMsg = (e: MessageEvent) => {
-        if (e.origin !== window.location.origin || (e.data as { type?: string })?.type !== "asm-payment-done") return;
-        done();
-      };
-      window.addEventListener("message", onMsg);
-      const t = window.setInterval(() => {
-        if (!win.closed) return;
-        window.clearInterval(t);
-        window.removeEventListener("message", onMsg);
-        done();
-      }, 800);
-    },
-    [refetch, qc],
-  );
+  // Every payment runs in the in-page payment window; when it reports back, re-check premium status.
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin || (e.data as { type?: string })?.type !== "asm-payment-done") return;
+      refetch();
+      qc.invalidateQueries();
+      if ((e.data as { ok?: boolean }).ok) window.setTimeout(() => setExternalUrl(null), 1800);
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [refetch, qc]);
+  const closePayment = () => {
+    setExternalUrl(null);
+    refetch();
+    qc.invalidateQueries();
+  };
 
   const startCheckout = useCallback(
     async (opts?: { url?: string | undefined }) => {
@@ -90,14 +76,15 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (settings.paymentMode === "external") {
-        const url = (opts?.url || settings.externalUrl).trim();
+        const total = prices.length ? Math.max(...prices.map((p) => p.day)) : 1;
+        const day = profile ? dayFromStart(new Date(profile.created_at), total) : 1;
+        // Every CTA uses the visitor's current-day URL unless a specific one is given.
+        const url = (opts?.url?.trim() || paymentUrlForDay(prices, day, settings.externalUrl)).trim();
         if (!url) {
           toast.error("Le lien de paiement n'est pas encore configuré.");
           return;
         }
-        const win = openPaymentPopup(url);
-        if (win) watchPopup(win);
-        else setExternalUrl(url); // popup blocked: in-page payment window instead
+        setExternalUrl(url);
         return;
       }
       if (!user || !profile) {
@@ -107,19 +94,12 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
       }
       const total = prices.length ? Math.max(...prices.map((p) => p.day)) : 1;
       const amount = priceForDay(prices, dayFromStart(new Date(profile.created_at), total));
-      // Opened right away, inside the click, so browsers don't block it.
-      const win = settings.paymentMode === "moneroo" ? openPaymentPopup("about:blank") : null;
       setBusy(true);
       try {
         if (settings.paymentMode === "moneroo") {
-          const returnUrl = win
-            ? `${window.location.origin}/au-stop-de-madame/paiement-retour`
-            : (window.location.href.split("#")[0] ?? window.location.href);
+          const returnUrl = `${window.location.origin}/au-stop-de-madame/paiement-retour`;
           const { checkoutUrl } = await startMoneroo({ data: { returnUrl } });
-          if (win && !win.closed) {
-            win.location.href = checkoutUrl;
-            watchPopup(win);
-          } else setExternalUrl(checkoutUrl);
+          setExternalUrl(checkoutUrl);
           return;
         }
         const { error } = await supabase
@@ -128,24 +108,27 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         setOrderInfo(formatMoney(amount, settings.currency));
       } catch (e) {
-        win?.close();
         toast.error(e instanceof Error ? e.message : "Paiement impossible");
       } finally {
         setBusy(false);
       }
     },
-    [isPremium, settings, user, profile, prices, navigate, startMoneroo, watchPopup],
+    [isPremium, settings, user, profile, prices, navigate, startMoneroo],
   );
 
   return (
     <PaymentCtx.Provider value={{ startCheckout, busy }}>
       {children}
-      <Dialog open={!!externalUrl} onOpenChange={(o) => !o && setExternalUrl(null)}>
-        <DialogContent className="flex h-[88vh] w-[96vw] max-w-3xl flex-col gap-0 overflow-hidden p-0 [&>button]:hidden">
+      <Dialog open={!!externalUrl} onOpenChange={(o) => !o && closePayment()}>
+        {/* Same size as the settings window, page behind stays sharp and visible on every side. */}
+        <DialogContent
+          overlayClassName="bg-transparent"
+          className="flex h-[calc(100dvh-4rem)] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl [&>button]:hidden"
+        >
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <DialogTitle className="text-sm font-semibold">Offre premium</DialogTitle>
             <DialogDescription className="sr-only">Page de paiement externe</DialogDescription>
-            <Button size="icon" variant="ghost" onClick={() => setExternalUrl(null)} aria-label="Fermer">
+            <Button size="icon" variant="ghost" onClick={closePayment} aria-label="Fermer">
               <X className="h-4 w-4" />
             </Button>
           </div>

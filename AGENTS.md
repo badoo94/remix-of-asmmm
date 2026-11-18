@@ -39,8 +39,8 @@ use the editor.
 - AI PDF distribution sends ~4.5k-char parts with low reasoning effort and is resumable; why: long AI calls were cut by the network before answering.
 - Editor rectangles open settings on double tap detected from react-rnd drag start/stop; why: mobile browsers never fire dblclick on draggable elements.
 - Custom pages (`type = "custom"`) store their carousel cards in `method_pages.cards` and render in a screen-sized shell (overlay layer is PAGE_W wide, its height follows the shell, passed to editors via the overlay function); why: card HTML must stay readable at device size while rectangle coordinates keep page percentages.
-- Every premium payment runs in a popup window (external URL per `day_prices.url`, falling back to the general URL; Moneroo returns to `/au-stop-de-madame/paiement-retour`, which verifies, notifies the opener and closes); why: the user never leaves the app to pay.
-- Two-finger scrolling over custom-page cards (carousel and card iframes) is forwarded to the page scroller (`bridgeScroll` in CustomPage.tsx); why: cards must never scroll internally.
+- Every premium payment runs in an in-page window (iframe, no blur, margins on all sides); CTAs default to the visitor's current-day `day_prices.url`, else the general URL; Moneroo returns to `/au-stop-de-madame/paiement-retour`, which verifies and notifies the parent; why: the user never leaves the app to pay.
+- Custom-page cards scroll internally with one finger/wheel; a held double tap/click + vertical drag scrolls the whole site (`bridgeScroll` in CustomPage.tsx); why: user-chosen gesture split.
 - The first account to sign up becomes admin (signup trigger); why: a fresh backend needs one owner to configure the app.
 
 - Table-of-contents links are `<a data-goto="exact heading">` resolved by `findSectionPage` (src/lib/toc.ts) in the reader; why: AI output and reader must agree on one link format.

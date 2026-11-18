@@ -59,46 +59,71 @@ function scrollParent(el: HTMLElement | null): HTMLElement | Window {
 }
 
 /**
- * Two-finger scrolling (trackpad / two-finger touch) over the cards scrolls the whole site,
+ * Held double tap/click + vertical drag over the cards scrolls the whole site,
  * never the inside of a card. Horizontal gestures still swipe between cards.
  * Works on the carousel and inside each card's iframe document.
  */
 function bridgeScroll(target: Document | HTMLElement, carousel: HTMLElement) {
+  // One-finger / wheel scrolling stays native (card content scrolls, horizontal swipes change card).
+  // Double tap (or double click) held, then dragged vertically, scrolls the whole site.
   const page = () => scrollParent(carousel);
+  let lastDown = 0;
+  let lastX = 0;
+  let lastDY = 0;
+  let dragY: number | null = null;
+  const begin = (x: number, y: number) => {
+    const now = Date.now();
+    const isDouble = now - lastDown < 350 && Math.abs(x - lastX) < 40 && Math.abs(y - lastDY) < 40;
+    lastDown = now;
+    lastX = x;
+    lastDY = y;
+    dragY = isDouble ? y : null;
+  };
+  const move = (y: number, e: Event) => {
+    if (dragY === null) return;
+    e.preventDefault();
+    page().scrollBy({ top: dragY - y, behavior: "instant" as ScrollBehavior });
+    dragY = y;
+  };
+  const end = () => (dragY = null);
+  const onTouchStart = (e: Event) => {
+    const t = (e as TouchEvent).touches;
+    if (t.length !== 1 || !t[0]) {
+      end();
+      return;
+    }
+    begin(t[0].clientX, t[0].clientY);
+  };
+  const onTouchMove = (e: Event) => {
+    const t = (e as TouchEvent).touches[0];
+    if (t) move(t.clientY, e);
+  };
+  const onMouseDown = (e: Event) => {
+    const m = e as MouseEvent;
+    if (m.button !== 0) return;
+    begin(m.clientX, m.clientY);
+    if (dragY !== null) e.preventDefault(); // no text selection while dragging the site
+  };
+  const onMouseMove = (e: Event) => move((e as MouseEvent).clientY, e);
   const onWheel = (e: Event) => {
-    const w = e as WheelEvent;
-    if (w.ctrlKey) return; // pinch-zoom
+    if (dragY === null) return; // held double click + wheel also scrolls the site
     e.preventDefault();
-    const k = w.deltaMode === 1 ? 16 : w.deltaMode === 2 ? window.innerHeight : 1;
-    if (Math.abs(w.deltaX) > Math.abs(w.deltaY)) carousel.scrollLeft += w.deltaX * k;
-    else page().scrollBy({ top: w.deltaY * k, behavior: "instant" as ScrollBehavior });
+    page().scrollBy({ top: (e as WheelEvent).deltaY, behavior: "instant" as ScrollBehavior });
   };
-  let lastY: number | null = null;
-  const avgY = (t: TouchList) => ((t[0]?.clientY ?? 0) + (t[1]?.clientY ?? 0)) / 2;
-  const onStart = (e: Event) => {
-    const t = (e as TouchEvent).touches;
-    lastY = t.length === 2 ? avgY(t) : null;
-  };
-  const onMove = (e: Event) => {
-    const t = (e as TouchEvent).touches;
-    if (t.length !== 2 || lastY === null) return;
-    e.preventDefault();
-    const y = avgY(t);
-    page().scrollBy({ top: lastY - y, behavior: "instant" as ScrollBehavior });
-    lastY = y;
-  };
-  const onEnd = () => (lastY = null);
   const opts = { passive: false } as AddEventListenerOptions;
-  target.addEventListener("wheel", onWheel, opts);
-  target.addEventListener("touchstart", onStart, opts);
-  target.addEventListener("touchmove", onMove, opts);
-  target.addEventListener("touchend", onEnd);
-  return () => {
-    target.removeEventListener("wheel", onWheel, opts);
-    target.removeEventListener("touchstart", onStart, opts);
-    target.removeEventListener("touchmove", onMove, opts);
-    target.removeEventListener("touchend", onEnd);
-  };
+  const pairs: [string, (e: Event) => void][] = [
+    ["touchstart", onTouchStart],
+    ["touchmove", onTouchMove],
+    ["touchend", end],
+    ["touchcancel", end],
+    ["mousedown", onMouseDown],
+    ["mousemove", onMouseMove],
+    ["mouseup", end],
+    ["mouseleave", end],
+    ["wheel", onWheel],
+  ];
+  pairs.forEach(([k, f]) => target.addEventListener(k, f, opts));
+  return () => pairs.forEach(([k, f]) => target.removeEventListener(k, f, opts));
 }
 
 /** The "Page personnalisée" web carousel: one card per HTML snippet (iframe) or media card. */

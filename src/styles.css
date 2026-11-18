@@ -672,3 +672,20 @@
   color: var(--cp-gold);
   background: transparent;
 }
+
+/* Clickable table-of-contents entries */
+.mp-page a[data-goto],
+.mp-custom-shell a[data-goto] {
+  color: var(--brand-gold, currentColor);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.mp-page a[data-goto]::after,
+.mp-custom-shell a[data-goto]::after {
+  content: " →";
+  text-decoration: none;
+  display: inline-block;
+  margin-left: 0.25em;
+}

@@ -108,6 +108,7 @@ export function useTTS(getPageEl: (n: number) => HTMLElement | null, totalPages:
     cloudPaused: false,
   });
   const autoRef = useRef(auto);
+  const singleRef = useRef(false); // per-page play button: read only that page
   const genderRef = useRef(gender);
   const totalRef = useRef(totalPages);
   autoRef.current = auto;
@@ -128,7 +129,7 @@ export function useTTS(getPageEl: (n: number) => HTMLElement | null, totalPages:
   const pageFinished = (token: number) => {
     const s = state.current;
     if (token !== s.token) return;
-    if (autoRef.current && s.page < totalRef.current) startPageRef.current(s.page + 1, token);
+    if (autoRef.current && !singleRef.current && s.page < totalRef.current) startPageRef.current(s.page + 1, token);
     else {
       setPlaying(false);
       clearHighlight();
@@ -262,8 +263,9 @@ export function useTTS(getPageEl: (n: number) => HTMLElement | null, totalPages:
 
   /** Must be called from the user's tap (unlocks audio). */
   const play = useCallback(
-    (n?: number) => {
+    (n?: number, single?: boolean) => {
       unlockAudio();
+      singleRef.current = single ?? false;
       const s = state.current;
       if (!s.mode) s.mode = hasNativeSpeech() ? "native" : "cloud";
       if (s.mode === "native" && !hasNativeSpeech()) s.mode = "cloud";

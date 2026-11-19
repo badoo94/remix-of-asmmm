@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { distributeTextChunk } from "@/lib/ai.functions";
+import { fitPagesAt27 } from "@/lib/fit-split";
 import { chunkPages, extractPdfPages } from "@/lib/pdf-text";
 
 type Job = { chunks: string[]; next: number; position: number; created: number; note: string; oldPageIds: string[] };
@@ -51,6 +52,8 @@ export function AiDistributor({ beforeRun }: { beforeRun: () => Promise<void> })
         } catch (e) {
           throw new Error(friendly(e, i + 1));
         }
+        // Validation: pages overflowing their cadre at 27 pt continue on extra "frame" pages.
+        pages = fitPagesAt27(pages);
         if (pages.length) {
           const rows = pages.map((p) => ({
             position: ++j.position,

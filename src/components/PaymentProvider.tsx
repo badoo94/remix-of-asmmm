@@ -80,6 +80,16 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [refetch, qc]);
+  // Touching the payment form moves focus into the iframe: switch to a pure full-page view.
+  useEffect(() => {
+    if (!externalUrl) return;
+    const onBlur = () =>
+      window.setTimeout(() => {
+        if (document.activeElement instanceof HTMLIFrameElement && document.activeElement.title === "Paiement") setBigPay(true);
+      }, 0);
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, [externalUrl]);
   const closePayment = () => {
     setExternalUrl(null);
     setBigPay(false);
@@ -141,10 +151,20 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
         {/* Same size as the settings window, page behind stays sharp and visible on every side. */}
         <DialogContent
           overlayClassName="bg-transparent"
-          style={bigPay ? { width: "100vw", height: "100dvh", maxWidth: "none", maxHeight: "none", borderRadius: 0 } : { width: "min(48rem, calc(100vw - 2rem))", height: "calc(100dvh - 4rem)", maxWidth: "none", maxHeight: "none" }}
+          style={bigPay ? { width: "100vw", height: "100dvh", maxWidth: "none", maxHeight: "none", borderRadius: 0, border: 0 } : { width: "min(48rem, calc(100vw - 2rem))", height: "calc(100dvh - 4rem)", maxWidth: "none", maxHeight: "none" }}
           className="flex flex-col gap-0 overflow-hidden rounded-2xl p-0 shadow-2xl [&>button]:hidden"
         >
-          <div className="flex items-center justify-between border-b border-border px-4 py-2">
+          {bigPay && (
+            <button
+              type="button"
+              onClick={closePayment}
+              aria-label="Fermer"
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-foreground/70 text-background shadow-lg"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          <div className={bigPay ? "hidden" : "flex items-center justify-between border-b border-border px-4 py-2"}>
             <DialogTitle className="text-sm font-semibold">Offre premium</DialogTitle>
             <DialogDescription className="sr-only">Page de paiement externe</DialogDescription>
             <div className="flex items-center gap-1">
